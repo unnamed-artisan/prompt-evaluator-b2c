@@ -17,9 +17,10 @@ type SearchParams = { company?: string }
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: SearchParams
+  searchParams: Promise<SearchParams>
 }) {
-  const company = searchParams.company?.trim() || null
+  const { company: rawCompany } = await searchParams
+  const company = rawCompany?.trim() || null
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
