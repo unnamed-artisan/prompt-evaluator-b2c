@@ -218,10 +218,9 @@ export default async function MyPage() {
                     </div>
 
                     {/* CTA：Stripe Payment Link。末尾に client_reference_id を付与して、
-                        誰が決済したのかを Webhook 側で特定できるようにする。
-                        TODO: 本番のStripe決済リンクに差し替える（現在はダミー） */}
+                        誰が決済したのかを Webhook 側で特定できるようにする。 */}
                     <a
-                      href={`https://buy.stripe.com/test_dummy?client_reference_id=${user.id}`}
+                      href={`https://buy.stripe.com/test_5kQ14p3JP3eHgtW8wG6Ri00?client_reference_id=${user.id}`}
                       className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-amber-500/30 transition-transform hover:scale-[1.02] hover:from-amber-600 hover:to-amber-700"
                     >
                       プレミアムプランに登録する（Stripeへ）
