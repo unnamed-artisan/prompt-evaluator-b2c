@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/utils/supabase/server";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -28,24 +28,15 @@ Do not include any markdown formatting like \`\`\`json or \`\`\`. Output ONLY th
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { prompt, company_name, department } = body;
+    const { prompt } = body;
 
     console.log("[evaluate] Received request:", {
-      company_name,
-      department,
       promptLength: typeof prompt === "string" ? prompt.length : null,
     });
 
     if (!prompt || typeof prompt !== "string" || prompt.trim() === "") {
       return NextResponse.json(
         { error: "プロンプトを入力してください" },
-        { status: 400 }
-      );
-    }
-
-    if (!company_name || typeof company_name !== "string" || company_name.trim() === "") {
-      return NextResponse.json(
-        { error: "会社名を入力してください" },
         { status: 400 }
       );
     }
@@ -92,21 +83,26 @@ export async function POST(request: NextRequest) {
       throw new Error("Invalid response structure");
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const supabase = await createClient();
 
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error("Supabase environment variables are not configured");
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // ログイン中であればそのユーザーの ID を取得（未ログインなら null）。
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     const insertData = {
       id: crypto.randomUUID(),
-      company_name: company_name.trim(),
-      department: (department as string | undefined)?.trim() || null,
+      user_id: user?.id ?? null,
       original_prompt: prompt.trim(),
       score: result.score,
+      // 添削後プロンプトはそのまま保存。
+      improved_prompt: result.improved_prompt,
+      // フィードバック（強み／改善点）は構造を保ったまま JSON 文字列として保存し、
+      // マイページ側でパースして表示する。
+      feedback: JSON.stringify({
+        good_points: result.good_points,
+        bad_points: result.bad_points,
+      }),
       created_at: new Date().toISOString(),
     };
 
@@ -122,23 +118,6 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("[evaluate] Supabase insert successful");
-
-    // ── 5件到達チェック ──────────────────────────────────────────
-    const { count, error: countError } = await supabase
-      .from("evaluations")
-      .select("*", { count: "exact", head: true })
-      .eq("company_name", insertData.company_name);
-
-    if (countError) {
-      console.error("[evaluate] Count query error:", countError);
-    } else if (count === 5) {
-      // TODO: ここにメール自動送信処理を追加する
-      const dashboardUrl = `http://localhost:3000/dashboard?company=${encodeURIComponent(insertData.company_name)}`;
-      console.log("=".repeat(60));
-      console.log(`🎉 ALERT: ${insertData.company_name} の診断が5件に達しました！専用ダッシュボードURL: ${dashboardUrl}`);
-      console.log("=".repeat(60));
-    }
-    // ────────────────────────────────────────────────────────────
 
     return NextResponse.json(result);
   } catch (error) {

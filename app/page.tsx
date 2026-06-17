@@ -113,8 +113,6 @@ function SectionCard({
 }
 
 export default function Home() {
-  const [companyName, setCompanyName] = useState("");
-  const [department, setDepartment] = useState("");
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<EvaluationResult | null>(null);
@@ -136,7 +134,7 @@ export default function Home() {
       const response = await fetch("/api/evaluate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, company_name: companyName, department }),
+        body: JSON.stringify({ prompt }),
       });
 
       const data = await response.json();
@@ -164,15 +162,15 @@ export default function Home() {
               className="text-xs uppercase tracking-widest font-medium mb-1"
               style={{ color: "#93c5fd" }}
             >
-              Diagnostic Report 2026
+              Prompt Diagnosis
             </p>
             <h1 className="text-xl font-bold leading-tight">
-              AI活用能力診断レポート
+              AIプロンプト診断
               <span
                 className="ml-3 font-normal text-base"
                 style={{ color: "#93c5fd" }}
               >
-                — 2026年度版
+                — あなたの指示文、何点？
               </span>
             </h1>
           </div>
@@ -286,7 +284,7 @@ export default function Home() {
                   レポートで改善
                 </h3>
                 <p className="text-sm text-slate-500 leading-relaxed">
-                  強みと弱みを把握し、100点の改善版プロンプトをすぐに実務で使えます。
+                  強みと弱みを把握し、100点の改善版プロンプトをそのままコピーして使えます。
                 </p>
               </div>
             </div>
@@ -297,41 +295,13 @@ export default function Home() {
         <div className="bg-white rounded-lg border border-slate-200 shadow-sm mb-8">
           <div className="px-6 py-4 border-b border-slate-100">
             <h2 className="text-base font-bold text-slate-700">
-              診断対象プロンプトの入力
+              プロンプトを診断する
             </h2>
             <p className="text-sm text-slate-500 mt-1">
-              普段AIツールに送信しているプロンプトを入力してください。診断レポートを生成します。
+              普段あなたがAIに送っているプロンプトを貼り付けてください。すぐに診断レポートをお届けします。
             </p>
           </div>
           <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                  会社名{" "}
-                  <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="例: 株式会社〇〇"
-                  className="w-full px-4 py-2.5 rounded border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-slate-800 placeholder-slate-400 text-sm transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                  部署名{" "}
-                  <span className="text-slate-400 font-normal">（任意）</span>
-                </label>
-                <input
-                  type="text"
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  placeholder="例: 営業部、マーケティング部"
-                  className="w-full px-4 py-2.5 rounded border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-slate-800 placeholder-slate-400 text-sm transition-colors"
-                />
-              </div>
-            </div>
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
@@ -343,11 +313,11 @@ export default function Home() {
               <span className="text-xs text-slate-400">{prompt.length} 文字</span>
               <button
                 onClick={handleSubmit}
-                disabled={isLoading || !prompt.trim() || !companyName.trim()}
+                disabled={isLoading || !prompt.trim()}
                 className="flex items-center gap-2 px-7 py-2.5 text-white font-semibold rounded text-sm transition-colors shadow-sm disabled:cursor-not-allowed"
                 style={{
                   backgroundColor:
-                    isLoading || !prompt.trim() || !companyName.trim() ? "#cbd5e1" : "#1e3a5f",
+                    isLoading || !prompt.trim() ? "#cbd5e1" : "#1e3a5f",
                 }}
               >
                 {isLoading ? (
@@ -448,7 +418,7 @@ export default function Home() {
                 >
                   診断完了
                 </p>
-                <p className="font-bold text-lg">AI活用能力診断レポート</p>
+                <p className="font-bold text-lg">プロンプト診断レポート</p>
               </div>
               <div className="text-right text-sm" style={{ color: "#93c5fd" }}>
                 <p>診断日時: {reportDate}</p>
@@ -501,12 +471,12 @@ export default function Home() {
                   </div>
                   <p className="text-sm text-slate-600 leading-7">
                     {result.score >= 80
-                      ? "高水準のAI活用能力を有しています。プロンプトの構造・目的・背景情報が適切に含まれており、AIの応答品質を最大化できています。"
+                      ? "とても上手にAIを使いこなせています！プロンプトの構造・目的・背景情報がしっかり含まれていて、AIの回答品質を最大限に引き出せています。"
                       : result.score >= 60
-                      ? "一定のAI活用能力を有していますが、改善の余地があります。指示の明確化や背景情報の追加により、さらなる品質向上が期待できます。"
+                      ? "なかなか良いプロンプトです。あと少し指示を明確にしたり背景情報を足したりすると、回答の質がもっと上がりますよ。"
                       : result.score >= 40
-                      ? "AI活用能力の向上が推奨されます。プロンプトに目的・条件・期待するアウトプット形式を明示することで、大幅な改善が見込まれます。"
-                      : "AI活用能力の基礎的な習得が必要です。「具体的改善案」セクションを参照し、プロンプト設計のスキルアップを図ってください。"}
+                      ? "伸びしろたっぷりのプロンプトです。目的・条件・ほしいアウトプットの形式を書き加えるだけで、グッと良くなります。"
+                      : "まずは基本からいきましょう。「具体的改善案」を参考に、少しずつプロンプトのコツをつかんでいきましょう。"}
                   </p>
                 </div>
               </div>
@@ -635,14 +605,12 @@ export default function Home() {
             {/* フッター */}
             <div className="text-center py-5 border-t border-slate-200">
               <p className="text-xs text-slate-400 mb-4">
-                本レポートはAIによる自動生成です。人事評価・自己研鑽の参考資料としてご利用いただけます。
+                本レポートはAIによる自動生成です。あなたのプロンプトスキルアップや自己研鑽にぜひお役立てください。
               </p>
               <button
                 onClick={() => {
                   setResult(null);
                   setPrompt("");
-                  setCompanyName("");
-                  setDepartment("");
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
                 className="text-slate-400 hover:text-slate-600 text-sm underline transition-colors"
